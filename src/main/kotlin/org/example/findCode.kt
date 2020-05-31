@@ -12,13 +12,13 @@ fun main(args: Array<String>) = Find().finder(args)
 
 class Find {
 
-    @Option(name = "-d", usage = "Поиск файла в текущей директории")
+    @Option(name = "-d", usage = "Search for a file in the current directory")
     private var directory = "."
 
-    @Option(name = "-r", usage = "Поиск файл во всех поддиректориях")
+    @Option(name = "-r", usage = "Search file in all subdirectories")
     private var subdirectory = false
 
-    @Argument(required = true, usage = "Название нужного файла")
+    @Argument(required = true, usage = "The name of the file")
     private var file = ""
 
     private fun parser(args: Array<String>) {
@@ -32,12 +32,13 @@ class Find {
         }
     }
 
-    private fun thePathToTheFile(subdirectory: Boolean, directory: String, file: String): MutableSet<File> {
-        val result = mutableListOf<File>()
-        for (element in directory) {
-            if (file in element) result.add
+    fun thePathToTheFile(subdirectory: Boolean, directory: String, file: String): List<String> {
+        val result = mutableListOf<String>()
+        for (element in File(directory).listFiles()!!) {
+            val newDirectory = element.toString()
+            if (file in newDirectory) result.add(newDirectory)
             if (element.isDirectory && subdirectory)
-                thePathToTheFile(subdirectory, element, file).forEach { result.add(it.toString()) }
+                thePathToTheFile(subdirectory, newDirectory, file).forEach { result.add(it) }
         }
         return result
     }
@@ -57,24 +58,3 @@ class Find {
         for (i in result) println(i)
     }
 }
-
-class FindFile {
-    companion object {
-        @JvmStatic
-        fun findFile(r: Boolean, directory: Path, filename: Path): MutableSet<Path> {
-            val result = mutableSetOf<Path>()
-            val p = Paths.get(directory.toString(), filename.toString())
-            if (Files.exists(p)) result.add(p)
-            if (r) {
-                val allFiles = Paths.get(directory.toString()).toFile() ?: return result
-                val allDir = allFiles.list() ?: return result
-                for (i in allDir) {
-                    val check = Paths.get(directory.toString(), i.toString())
-                    if (check.toFile().isDirectory) {
-                        result.addAll(findFile(true, Paths.get(directory.toString() + File.separator + i), filename))
-                    }
-                }
-            }
-            return result
-        }
-    }
